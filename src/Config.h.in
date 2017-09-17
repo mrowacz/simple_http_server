@@ -1,0 +1,10 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+namespace version {
+    constexpr const char * VERSION_MAJOR = "@Server_VERSION_MAJOR@";
+    constexpr const char * VERSION_MINOR = "@Server_VERSION_MINOR@";
+    constexpr const char * VERSION_SHA1 = "@VERSION_SHA1@";
+}
+
+#endif // VERSION_H
