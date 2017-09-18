@@ -5,56 +5,93 @@
 #include <memory>
 #include <iostream>
 
-#include "HttpLib.h"
 #include "dao/Dao.h"
 #include "http/Http.h"
 #include "gtest/gtest.h"
+#include "ServerError.h"
+#include "router/HttpRouter.h"
 #include "dao/EphemeralStorage.h"
 #include "restclient-cpp/restclient.h"
 
 using namespace std;
 using namespace http;
+using namespace router;
 
 class ServerTest : public ::testing::Test {
 protected:
 
     ServerTest() :
-            server(),
+            router(),
             daoPtr(make_unique<EphemeralStorage>()),
-            path_1(make_unique<RestPath>()),
-            path_1_str("/api/objects/")
+            path_1(make_unique<HttpPath>("/api/objects/:id")),
+            path_2(make_unique<HttpPath>("/api/objects"))
     {
-        path_1->setPathStr(path_1_str)
-                ->addMethod(http::RestMethod::PUT, [this](auto &req,  auto &res) -> void {
-                    daoPtr->create(
-                            RestPath::objectName(path_1_str, req.url),
-                            req.body,
-                            lib::getContentHeader(req.headers),
-                            res
-                    );
-                })
-                ->addMethod(http::RestMethod::GET, [this](auto &req,  auto &res) -> void {
-                    daoPtr->get(
-                            RestPath::objectName(path_1_str, req.url),
-                            res
-                    );
-                })
-                ->addMethod(http::RestMethod::DELETE, [this](auto &req,  auto &res) -> void {
-                    daoPtr->del(
-                            RestPath::objectName(path_1_str, req.url),
-                            res
-                    );
-                });
+        server = make_unique<Server>([&](auto& req, auto& res) {
+            try {
+                router.route(req, res);
+            } catch (router_exception& e) {
+                ServerError::handleRouterException(e, res);
+            }
+        });
 
-        server
-                .port(8080)
-                .enableStdLogs(false)
-                .registerPath(path_1)
-                .run();
+        path_1->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) -> void {
+            string id = (*pHandler)["id"];
+
+            try {
+                string payload;
+                string type;
+                tie(type, payload) = daoPtr->get(id);
+                res.headers.insert({"Content-Type", type});
+                res.setStatus(http_status::HTTP_STATUS_OK);
+                res.end(payload);
+            } catch (dao::dao_exception& e) {
+                ServerError::handleDaoException(e, res);
+            }
+        });
+
+        path_1->set(router::Method::PUT, [&](auto& req, auto& res, auto pHandler) -> void {
+            string id = (*pHandler)["id"];
+            try {
+                daoPtr->create(id, req.body.str(), req.headers.at("Content-Type"));
+                res.setStatus(http_status::HTTP_STATUS_CREATED);
+                res.end();
+            } catch (dao::dao_exception& e) {
+
+                ServerError::handleDaoException(e, res);
+            }
+        });
+
+        path_1->set(router::Method::DELETE, [&](auto& req, auto& res, auto pHandler) -> void {
+            string id = (*pHandler)["id"];
+
+            try {
+                daoPtr->del(id);
+                res.setStatus(http_status::HTTP_STATUS_OK);
+                res.end();
+            } catch (dao::dao_exception& e) {
+                ServerError::handleDaoException(e, res);
+            }
+        });
+
+        auto path_2 = make_unique<HttpPath>("/api/objects");
+        path_2->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) {
+            string payload;
+            try {
+                payload = daoPtr->list();
+                res.headers.insert({"Content-Type", "application/json"});
+                res.setStatus(http_status::HTTP_STATUS_OK);
+                res.end(payload);
+            } catch (dao::dao_exception& e) {
+                ServerError::handleDaoException(e, res);
+            }
+        });
+        router.addPath(path_1);
+        router.addPath(path_2);
+        server->run();
     }
 
     virtual ~ServerTest() {
-        server.stop();
+        server->stop();
     }
 
     virtual void SetUp() {
@@ -64,9 +101,11 @@ protected:
     }
 
     std::string path_1_str;
-    Server server;
+    unique_ptr<Server> server;
+    Router router;
     unique_ptr<dao::Dao> daoPtr;
-    unique_ptr<RestPath> path_1;
+    unique_ptr<HttpPath> path_1;
+    unique_ptr<HttpPath> path_2;
 };
 
 TEST_F(ServerTest, CRUD_basic_tests)

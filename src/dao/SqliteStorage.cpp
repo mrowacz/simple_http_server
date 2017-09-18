@@ -2,81 +2,84 @@
 // Created by mrowacz on 16.09.17.
 //
 
+#include <http_parser.h>
 #include "SqliteStorage.h"
-#include "../HttpLib.h"
+#include "../LogEngine.h"
 
-void SqliteStorage::create(const string id, stringstream& ss,
-            const string contentType, Response& resp)
+using namespace dao;
+using namespace std;
+
+namespace logging = boost::log;
+using namespace logging::trivial;
+
+void SqliteStorage::create(const std::string& id, const std::string& payload, const std::string& type)
 {
-    string data = ss.str();
-    if (!lib::checkObjectName(id) || contentType.empty()) {
-        resp.setStatus(http_status::HTTP_STATUS_BAD_REQUEST);
-        return;
-    }
-    if (data.length() > dao::ONE_MB) {
-        resp.setStatus(http_status::HTTP_STATUS_PAYLOAD_TOO_LARGE);
-        return;
-    }
+    if (type.empty())
+        throw dao_exception(dao_error::empty_content);
+
+    if (payload.empty())
+        throw dao_exception(dao_error::empty_payload);
+    if (payload.length() > ONE_MB)
+        throw dao_exception(dao_error::object_too_large);
 
     try {
         *db << "INSERT OR REPLACE INTO objects "
            "(name, type, payload) values (?, ?, ?);"
            << id
-           << contentType
-           << data;
+           << type
+           << payload;
     } catch (exception &e) {
-        cout << e.what() << endl;
+        throw dao_exception(dao_error::internal_error, e.what());
     }
-    resp.setStatus(http_status::HTTP_STATUS_CREATED);
 }
 
-void SqliteStorage::del(const string id, Response& resp)
+void SqliteStorage::del(const string& id)
 {
     try {
+        // if doesn't exists throw exception
+        auto data = get(id);
         *db << "DELETE FROM objects WHERE name = ?;" << id;
-    } catch (exception &e) {
-        cout << e.what() << endl;
+    } catch (sqlite::sqlite_exception &e) {
+        throw dao_exception(dao_error::internal_error, e.what());
     }
-    resp.setStatus(http_status::HTTP_STATUS_OK);
 }
 
-void SqliteStorage::get(const string id, Response& resp)
+std::tuple<std::string, std::string> SqliteStorage::get(const string& id)
 {
-    if (id.empty()) {
-        list(resp);
-        return;
-    }
-    if (!lib::checkObjectName(id)) {
-        resp.setStatus(http_status::HTTP_STATUS_BAD_REQUEST);
-        return;
-    }
-    // FIXME - fix issues with sqlite3 - see functional tests
+    tuple<string,string> tp;
+    if (id.empty())
+        return make_tuple<string, string>(list(), "");
+
     try {
         *db << "SELECT name, type, payload FROM objects WHERE name = ?;"
             << id
             >> [&](string name, string type, string payload) -> void {
-                resp.body += payload;
-                resp.setHeader(http::HTTP_HEADER_CONTENT_TYPE, type);
-                resp.setStatus(http_status::HTTP_STATUS_OK);
-                return;
+                BOOST_LOG_SEV(slog::lg, info) << "Read " << id << " type: " <<
+                                              type << " " << payload.size();
+
+                tp = make_tuple<>(type, payload);
             };
-
-    } catch (exception &e) {
-        cout << e.what() << endl;
+    } catch (exception& e) {
+        throw dao_exception(dao_error::internal_error, e.what());
     }
-    resp.setStatus(http_status::HTTP_STATUS_NOT_FOUND);
-}
 
-void SqliteStorage::list(Response& resp)
+    if (std::get<0>(tp).empty() || std::get<1>(tp).empty())
+        throw dao_exception(dao_error::not_found);
+
+    return tp;
+};
+
+std::string SqliteStorage::list()
 {
-    dao::genListHttpResponse(resp, [&](auto &vec) -> void {
+    return dao::genListStr([&](auto &vec) -> void {
         try {
             *db << "SELECT name FROM objects;"
                 >> [&](string name) {
                     vec.push_back(name);
                 };
+
         } catch (exception &e) {
-            cout << e.what() << endl;
+            throw dao_exception(dao_error::internal_error, e.what());
         }
     });
 }
@@ -90,11 +93,22 @@ SqliteStorage::SqliteStorage()
                 "name text PRIMARY KEY NOT NULL,"
                 "type text NOT NULL,"
                 "payload text NOT NULL);";
-    } catch(exception& e) {
-        cout << e.what() << endl;
+    } catch(sqlite::sqlite_exception& e) {
+        cerr << e.what() << e.get_code() <<  endl;
+    }
+}
+
+void SqliteStorage::clear()
+{
+    try {
+        *db << "DELETE FROM objects;";
+    } catch (sqlite::sqlite_exception& e) {
+        throw dao_exception(dao_error::internal_error, e.what());
     }
 }
 
 SqliteStorage::~SqliteStorage()
 {
+
 }
+

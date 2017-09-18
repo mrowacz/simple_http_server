@@ -1,6 +1,8 @@
+*.patch
 cmake-build-debug
 .idea/*
 test/1mb.txt
 test/myfile
 *.db
+
 

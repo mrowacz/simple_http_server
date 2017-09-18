@@ -3,33 +3,26 @@
 
 #include <map>
 #include <mutex>
-#include <array>
-#include <tuple>
-#include <memory>
+#include <thread>
 #include <vector>
 #include <string>
-#include <thread>
 #include <sstream>
 #include <iostream>
-#include <algorithm>
-#include <functional>
-#include <unordered_map>
-
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/setup/console.hpp>
-
 #include <unistd.h>
+#include <functional>
 
 #include "uv.h"
 #include "uri.h"
 #include "http_parser.h"
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
+extern "C" {
+#include "uv.h"
+#include "http_parser.h"
+}
 
 #define MAX_WRITE_HANDLES 1000
 
@@ -43,22 +36,14 @@ namespace http {
 
     using namespace std;
 
-    namespace logging = boost::log;
-    namespace src = boost::log::sources;
-    namespace sinks = boost::log::sinks;
-    namespace keywords = boost::log::keywords;
-    using namespace logging::trivial;
-
-    static src::severity_logger< severity_level > lg;
-
     template <class Type> class Buffer;
     template <class Type> class IStream;
 
     class Request;
     class Response;
     class Server;
+    class Client;
     class Context;
-    class RestPath;
 
     extern const string CRLF;
     extern void free_context (uv_handle_t*);
@@ -98,15 +83,17 @@ namespace http {
     };
 
 
-    constexpr auto HTTP_HEADER_CONTENT_TYPE = "Content-Type";
-
     class Request {
     public:
         string url;
         string method;
         string status_code;
         stringstream body;
-        map<const string, string> headers;
+        string cHeaderStr;
+        map<const string, const string> headers;
+
+        Request(const Request& that) = delete;
+
         Request() {}
         ~Request() {}
     };
@@ -140,7 +127,6 @@ namespace http {
 
         void setHeader (const string, const string);
         void setStatus (int);
-        void setStatus (int, string);
 
         void write (string);
         void end (string);
@@ -174,12 +160,8 @@ namespace http {
         uv_connect_t connect_req;
         uv_write_t write_req;
         http_parser parser;
-
-        // additional field to store current header name
-        string hName;
     };
 
-    constexpr int SERVER_DEFAULT_PORT = 8080;
     class Server {
 
         template<typename Type>
@@ -187,61 +169,25 @@ namespace http {
         friend class Response;
 
     private:
+        typedef function<void (
+                Request& req,
+                Response& res)> Listener;
+
+        Listener listener;
         uv_loop_t* UV_LOOP;
         uv_tcp_t socket_;
-        std::thread t;
-        mutable std::mutex m;
+        mutex m;
+        thread t;
         bool _flag;
-        int m_port;
 
-        vector<unique_ptr<RestPath>> restVec;
-
-        int complete(http_parser* parser);
-        int listen (const char*, int);
+        int complete(http_parser* parser, Listener fn);
 
     public:
-        Server ();
+        Server (Listener listener);
         ~Server() {}
-        Server(const Server &other) = delete;
-        Server& run();
-        Server& stop();
-        Server& enableStdLogs(bool enable);
-        Server& port(int port);
-        Server& registerPath(RestPath&& ptr);
-        Server& registerPath(unique_ptr<RestPath> &ptr);
-    };
-
-
-    // REST SECTION
-    enum class RestMethod : uint8_t { POST, GET, PUT, DELETE };
-    typedef tuple<RestMethod , string> restTuple;
-    enum class RestField : uint8_t { METHOD_NAME, METHOD_STR_NAME };
-
-    static array<restTuple, 4> const at = {
-            make_tuple(RestMethod::POST, "POST"),
-            make_tuple(RestMethod::GET, "GET"),
-            make_tuple(RestMethod::PUT, "PUT"),
-            make_tuple(RestMethod::DELETE, "DELETE")
-    };
-
-    class RestPath {
-    public:
-        typedef function<void (Request &req, Response &res)> method_cb;
-        static string objectName(const string& pathName, const string& url);
-
-        void handle(Request &req, Response &res);
-        RestPath *addMethod(RestMethod method, method_cb cb);
-        RestPath *setPathStr(string path);
-
-        RestPath() = default;
-        ~RestPath() {}
-
-        const map<string, method_cb> &getMethods() const;
-        const unique_ptr<string> &getPath() const;
-
-    private:
-        map<string, method_cb> mp;
-        unique_ptr<string> path;
+        void run();
+        void stop();
+        int listen (const char*, int);
     };
 
 } // namespace http

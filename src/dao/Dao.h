@@ -5,47 +5,68 @@
 #ifndef WP_INTERVIEW_DAO_H
 #define WP_INTERVIEW_DAO_H
 
+#include <vector>
 #include <sstream>
-#include "../http/Http.h"
+#include <exception>
+#include <functional>
 
 namespace dao {
-
-    using namespace std;
-    using namespace http;
-
     constexpr int ONE_MB = 1024 * 1024;
-    constexpr int MAX_OBJECT_NAME_LENGTH = 100;
 
     class Dao {
     public:
         virtual ~Dao() {}
-        virtual void create(const std::string id, std::stringstream& ss,
-                            const string contentType, Response& resp) = 0;
-        virtual void del(const string id, Response& resp) = 0;
-        virtual void get(const string id, Response& resp) = 0;
-
-        virtual void list(Response& resp) = 0;
+        virtual void create(const std::string& id, const std::string& payload, const std::string& type) = 0;
+        virtual void del(const std::string& id) = 0;
+        // elements of tuple :
+        // 0 - type
+        // 1 - payload
+        virtual std::tuple<std::string, std::string> get(const std::string& id) = 0;
+        virtual std::string list() = 0;
+        virtual void clear() = 0;
     };
 
-    inline void genListHttpResponse(http::Response &resp,
-        std::function<void(std::vector<string> &vec)> func)
+    enum class dao_error : std::uint32_t {
+        not_found,
+        object_too_large,
+        empty_content,
+        empty_payload,
+        internal_error
+    };
+
+    class dao_exception : public std::exception {
+    public:
+        dao_error code();
+        dao_exception(dao_error error, const char *msg);
+        dao_exception(dao_error error);
+        dao_exception(const char *msg);
+
+        const char* what() const throw()
+        {
+            return message.c_str();
+        }
+    private:
+        std::string message;
+        dao_error err;
+    };
+
+    inline std::string genListStr(
+        std::function<void(std::vector<std::string> &vec)> func)
     {
-        stringstream ss;
+        std::stringstream ss;
         ss << "[";
-        vector<string> vec;
+        std::vector<std::string> vec;
 
         // run query function
         func(vec);
 
-        for (int i = 0; i < vec.size(); i++)
-        {
+        for (int i = 0; i < vec.size(); i++) {
             ss << "\"" << vec[i] << "\"";
-            if (i != vec.size() -1)
+            if (i != vec.size() - 1)
                 ss << ", ";
         }
         ss << "]";
-        resp.body += ss.str();
-        resp.setStatus(http_status::HTTP_STATUS_OK);
+        return ss.str();
     }
 }
 

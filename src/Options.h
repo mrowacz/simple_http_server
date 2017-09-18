@@ -84,7 +84,6 @@ namespace server_options {
                 );
 
         if (argc == 1) {
-            cout << desc << endl;
             exit( EXIT_SUCCESS );
         }
 

@@ -5,23 +5,25 @@
 #ifndef WP_INTERVIEW_SQLITESTORAGE_H
 #define WP_INTERVIEW_SQLITESTORAGE_H
 
+#include <memory>
+#include <string>
 #include <sqlite_modern_cpp.h>
+
 #include "Dao.h"
 
 using namespace std;
-using namespace http;
 
 class SqliteStorage : public dao::Dao {
 public:
     SqliteStorage();
     ~SqliteStorage();
-    void create(const string id, stringstream& ss,
-                const string contentType, Response& resp);
-    void del(const string id, Response& resp);
-    void get(const string id, Response& resp);
-    void list(Response& resp);
+    void create(const std::string& id, const std::string& payload, const std::string& type);
+    void del(const string& id);
+    std::tuple<std::string, std::string> get(const string& id);
+    std::string list();
+    void clear();
 
-private:
+protected:
     std::unique_ptr<sqlite::database> db;
 };
 

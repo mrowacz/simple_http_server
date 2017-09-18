@@ -1,0 +1,22 @@
+# Specify the docker image to use (only used if using docker runners)
+# See: http://doc.gitlab.com/ee/ci/docker/using_docker_images.html
+image: ubuntu:16.04
+
+# Define commands that run before each job's script
+before_script:
+  - apt-get update
+  - apt-get -y install gcc g++ cmake git automake
+  - apt-get -y install build-essential libboost-all-dev
+  - apt-get -y install libcurl4-openssl-dev libsqlite3-dev
+
+server-build:
+  stage: build
+  script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make -j8
+  - ./runTests
+  artifacts:
+    paths:
+    - ./runTests

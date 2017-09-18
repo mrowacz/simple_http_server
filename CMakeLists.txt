@@ -6,8 +6,8 @@ project(wp_interview)
 include(ExternalProject)
 
 # project versioning
-set (Server_VERSION_MAJOR 1)
-set (Server_VERSION_MINOR 0)
+set (Server_VERSION_MAJOR 0)
+set (Server_VERSION_MINOR 9)
 
 # get git HEAD sha1
 exec_program(
@@ -29,7 +29,6 @@ configure_file (
 # set compiler settings
 SET(CMAKE_CXX_FLAGS_DEBUG "-O2 -g")
 SET(CMAKE_C_FLAGS_DEBUG "-O2")
-message("Build mode ${CMAKE_BUILD_TYPE}")
 
 # external libraries
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
@@ -51,7 +50,7 @@ ExternalProject_Add(googletest
 
 # add requests c++ library
 ExternalProject_Add(request
-        GIT_REPOSITORY git@github.com:mrtazz/restclient-cpp.git
+        GIT_REPOSITORY https://github.com/mrtazz/restclient-cpp.git
         #-- Configure step --
         CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${EXTERNAL_INSTALL_LOCATION}
         #-- Build Step --
@@ -63,7 +62,7 @@ ExternalProject_Add(request
 
 # add sql library
 ExternalProject_Add(sql
-        GIT_REPOSITORY git@github.com:aminroosta/sqlite_modern_cpp.git
+        GIT_REPOSITORY https://github.com/aminroosta/sqlite_modern_cpp.git
         CONFIGURE_COMMAND ./configure --prefix=${EXTERNAL_INSTALL_LOCATION}
         BUILD_COMMAND make
         BUILD_IN_SOURCE 1
@@ -95,7 +94,7 @@ ExternalProject_Add(http_parser_git
 
 # lightweight uri c++ parser
 ExternalProject_Add(nodeuv-uri
-    GIT_REPOSITORY http://github.com/hij1nx/nodeuv-uri
+    GIT_REPOSITORY https://github.com/hij1nx/nodeuv-uri
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     BUILD_IN_SOURCE 1
@@ -110,22 +109,23 @@ list(REMOVE_ITEM TESTING_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/Server.cpp)
 
 link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 add_executable(http_server ${SOURCE_FILES})
-target_include_directories(http_server PUBLIC ${EXTERNAL_INSTALL_LOCATION}/include)
+target_include_directories(http_server PUBLIC
+        ${EXTERNAL_INSTALL_LOCATION}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        )
 target_link_libraries(http_server
-        uv
         http_parser
         sqlite3
         pthread
         ${Boost_LIBRARIES}
-)
+        uv
+        )
 
 set(PROJECT_DEPENDENCIES
-        googletest
         libuv
         http_parser_git
         nodeuv-uri
         sql
-        request
 )
 add_dependencies(http_server ${PROJECT_DEPENDENCIES})
 
@@ -144,7 +144,11 @@ if (test)
     )
     target_include_directories(runTests PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
-    # Standard linking to gtest stuff.
+    add_dependencies(runTests
+        ${PROJECT_DEPENDENCIES}
+        googletest
+        request
+    )
     target_link_libraries(runTests
             gtest
             gtest_main

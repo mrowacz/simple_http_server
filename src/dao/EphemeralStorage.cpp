@@ -2,68 +2,50 @@
 // Created by l.czerwinski on 9/14/17.
 //
 
-#include <regex>
 #include <iostream>
+#include <algorithm>
 
-#include "http_parser.h"
-#include "../HttpLib.h"
 #include "EphemeralStorage.h"
 
 using namespace dao;
 using namespace std;
 
-void EphemeralStorage::create(const string id, stringstream& ss,
-                              const string contentType, Response& resp)
+void EphemeralStorage::create(const std::string& id, const std::string& payload, const std::string& type)
 {
-    string data = ss.str();
-    if (!lib::checkObjectName(id) || contentType.empty()) {
-        resp.setStatus(http_status::HTTP_STATUS_BAD_REQUEST);
-        return;
-    }
-    if (data.length() > dao::ONE_MB) {
-        resp.setStatus(http_status::HTTP_STATUS_PAYLOAD_TOO_LARGE);
-        return;
-    }
+    if (type.empty())
+        throw dao_exception(dao_error::empty_content);
+
+    if (payload.empty())
+        throw dao_exception(dao_error::empty_payload);
+    if (payload.length() > ONE_MB)
+        throw dao_exception(dao_error::object_too_large);
+
+    // if exists -- overwrite object
     if (mp.count(id) == 1)
-        del(id, resp);
+        del(id);
+
     mp.insert(std::pair<string, tuple<string, string>>
-                      (id, make_tuple<string, string>(string(contentType), ss.str())));
-    resp.setStatus(http_status::HTTP_STATUS_CREATED);
+                      (id, make_tuple<string, string>(string(type), string(payload))));
 }
 
-void EphemeralStorage::del(const string id, Response& resp)
+void EphemeralStorage::del(const string& id)
 {
     auto it = findId(id);
     if (it != mp.end())
         mp.erase(it);
-    resp.setStatus(http_status::HTTP_STATUS_OK);
+    else throw dao_exception(dao_error::not_found);
 }
 
-void EphemeralStorage::get(const string id, Response& resp)
+std::tuple<std::string, std::string> EphemeralStorage::get(const string& id)
 {
-    if (id.empty()) {
-        list(resp);
-        return;
-    }
-    if (!lib::checkObjectName(id)) {
-        resp.setStatus(http_status::HTTP_STATUS_BAD_REQUEST);
-        return;
-    }
+    if (id.empty())
+        return make_tuple<string, string>(list(), "");
 
     auto it = findId(id);
     if (it != mp.end())
     {
-        string cntType;
-        string payload;
-
-        tie(cntType, payload) = it->second;
-        resp.body += payload;
-        resp.setHeader(http::HTTP_HEADER_CONTENT_TYPE, cntType);
-        resp.setStatus(http_status::HTTP_STATUS_OK);
-        return;
-    }
-
-    resp.setStatus(http_status::HTTP_STATUS_NOT_FOUND);
+        return it->second;
+    } else throw dao_exception(dao_error::not_found);
 }
 
 map<string, tuple<string, string>>::iterator EphemeralStorage::findId(string id)
@@ -75,11 +57,16 @@ map<string, tuple<string, string>>::iterator EphemeralStorage::findId(string id)
     });
 }
 
-void EphemeralStorage::list(Response &resp)
+std::string EphemeralStorage::list()
 {
-    dao::genListHttpResponse(resp, [&](auto& vec) -> void {
+    return dao::genListStr([&](auto& vec) -> void {
         for_each(mp.begin(), mp.end(), [&](auto& it)->void {
             vec.push_back(it.first);
         });
     });
+}
+
+void EphemeralStorage::clear()
+{
+    mp.clear();
 }
