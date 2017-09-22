@@ -4,5 +4,6 @@ cmake-build-debug
 test/1mb.txt
 test/myfile
 *.db
-
+*.gcda
+*.gcno
 

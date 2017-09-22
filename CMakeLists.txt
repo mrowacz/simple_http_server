@@ -27,7 +27,7 @@ configure_file (
 )
 
 # set compiler settings
-SET(CMAKE_CXX_FLAGS_DEBUG "-O2 -g")
+SET(CMAKE_CXX_FLAGS_DEBUG "-fprofile-arcs -ftest-coverage -fPIC -O0 -g")
 SET(CMAKE_C_FLAGS_DEBUG "-O2")
 
 # external libraries
