@@ -19,4 +19,4 @@ server-build:
   - ./runTests
   artifacts:
     paths:
-    - ./runTests
+    - build/runTests
