@@ -13,7 +13,7 @@
 #include "router/HttpRouter.h"
 
 namespace ServerError {
-    void handleDaoException(dao::dao_exception& e, http::Response& resp)
+    static void handleDaoException(dao::dao_exception& e, http::Response& resp)
     {
         switch(e.code()) {
             case dao::dao_error::not_found:
@@ -37,7 +37,7 @@ namespace ServerError {
         resp.end();
     }
 
-    void handleRouterException(router::router_exception& e, http::Response& resp)
+    static void handleRouterException(router::router_exception& e, http::Response& resp)
     {
         switch(e.code()) {
             case router::router_error::bad_request:
