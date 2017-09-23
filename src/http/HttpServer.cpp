@@ -146,7 +146,6 @@ namespace http {
                 break;
         }
     }
-    uv_stop(UV_LOOP);
 
     return 0;
   }

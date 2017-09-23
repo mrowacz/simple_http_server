@@ -176,18 +176,19 @@ namespace http {
         Listener listener;
         uv_loop_t* UV_LOOP;
         uv_tcp_t socket_;
+
         mutex m;
         thread t;
         bool _flag;
 
         int complete(http_parser* parser, Listener fn);
+        int listen (const char*, int);
 
     public:
         Server (Listener listener);
         ~Server() {}
         void run();
         void stop();
-        int listen (const char*, int);
     };
 
 } // namespace http

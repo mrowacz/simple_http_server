@@ -27,7 +27,6 @@ namespace http {
             _flag = true;
         }
         t.join();
-
     }
 
     void free_context (uv_handle_t* handle) {
