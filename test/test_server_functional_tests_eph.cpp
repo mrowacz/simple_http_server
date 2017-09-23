@@ -17,10 +17,10 @@ using namespace std;
 using namespace http;
 using namespace router;
 
-class ServerTest : public ::testing::Test {
+class ServerTest_2 : public ::testing::Test {
 protected:
 
-    ServerTest() :
+    ServerTest_2() :
             router(),
             daoPtr(make_unique<EphemeralStorage>()),
             path_1(make_unique<HttpPath>("/api/objects/:id")),
@@ -90,7 +90,7 @@ protected:
         server->run();
     }
 
-    virtual ~ServerTest() {
+    virtual ~ServerTest_2() {
         server->stop();
     }
 
@@ -108,7 +108,7 @@ protected:
     unique_ptr<HttpPath> path_2;
 };
 
-TEST_F(ServerTest, CRUD_basic_tests)
+TEST_F(ServerTest_2, CRUD_basic_tests_with_eph)
 {
     std::string str("{\"foo\": \"bla\"}");
     std::string url("http://localhost:8080/api/objects/abc");
