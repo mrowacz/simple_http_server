@@ -45,78 +45,48 @@ int main(int argc, char *argv[])
     Router router;
     auto path_1 = make_unique<HttpPath>("/api/objects/:id");
 
-    path_1->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) -> void {
+    path_1->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) -> void
+    {
         string id = (*pHandler)["id"];
-
         INFO() << "id: " << id;
 
-        try {
-            string payload;
-            string type;
-            tie(type, payload) = daoPtr->get(id);
-            INFO() << "read from db " << id
-                                          << " " << payload.size() << " b"
-                                          << " " << type;
-            res.headers.insert({"Content-Type", type});
-            res.setStatus(http_status::HTTP_STATUS_OK);
-            res.end(payload);
-        } catch (dao::dao_exception& e) {
-
-           WARN() << "dao_exception " << templates::toUType(e.code());
-
-            ServerError::handleDaoException(e, res);
-        }
+        string payload;
+        string type;
+        tie(type, payload) = daoPtr->get(id);
+        INFO() << "read from db " << id
+               << " " << payload.size() << " b"
+               << " " << type;
+        res.headers.insert({"Content-Type", type});
+        res.setStatus(http_status::HTTP_STATUS_OK);
+        res.end(payload);
     });
 
     path_1->set(router::Method::PUT, [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
 
-        INFO() << "id: " << id;
-
-        try {
-            daoPtr->create(id, req.body.str(), req.headers.at("Content-Type"));
-            res.setStatus(http_status::HTTP_STATUS_CREATED);
-            res.end();
-        } catch (dao::dao_exception& e) {
-
-            WARN() << "dao_exception " << templates::toUType(e.code());
-
-            ServerError::handleDaoException(e, res);
-        }
+        INFO() << "PUT id: " << id;
+        daoPtr->create(id, req.body.str(), req.headers.at("Content-Type"));
+        res.setStatus(http_status::HTTP_STATUS_CREATED);
+        res.end();
     });
 
-    path_1->set(router::Method::DELETE, [&](auto& req, auto& res, auto pHandler) -> void {
+    path_1->set(router::Method::DELETE, [&](auto& req, auto& res, auto pHandler) -> void
+    {
         string id = (*pHandler)["id"];
-
-        INFO() << "id: " << id;
-        try {
-            daoPtr->del(id);
-            res.setStatus(http_status::HTTP_STATUS_OK);
-            res.end();
-        } catch (dao::dao_exception& e) {
-
-            WARN() << "dao_exception "
-                                             << templates::toUType(e.code());
-
-            ServerError::handleDaoException(e, res);
-        }
+        INFO() << "DELETE id: " << id;
+        daoPtr->del(id);
+        res.setStatus(http_status::HTTP_STATUS_OK);
+        res.end();
     });
 
     auto path_2 = make_unique<HttpPath>("/api/objects");
-    path_2->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) {
+    path_2->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler)
+    {
         string payload;
-        try {
-            payload = daoPtr->list();
-            res.headers.insert({"Content-Type", "application/json"});
-            res.setStatus(http_status::HTTP_STATUS_OK);
-            res.end(payload);
-        } catch (dao::dao_exception& e) {
-
-            WARN() << "dao_exception "
-                                             << templates::toUType(e.code());
-
-            ServerError::handleDaoException(e, res);
-        }
+        payload = daoPtr->list();
+        res.headers.insert({"Content-Type", "application/json"});
+        res.setStatus(http_status::HTTP_STATUS_OK);
+        res.end(payload);
     });
 
     // server setup and run
@@ -128,7 +98,7 @@ int main(int argc, char *argv[])
             router.route(req, res);
         } catch (router_exception& e) {
             FATAL() << "router_exception "
-                << templates::toUType(e.code());
+                    << templates::toUType(e.code());
             ServerError::handleRouterException(e, res);
         }
     });

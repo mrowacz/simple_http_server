@@ -11,13 +11,11 @@ namespace http {
 
     Server::Server (Listener fn) :
             listener(fn) {
-
     }
 
     void Server::run()
     {
         t = std::thread(std::bind(&Server::listen, this, "0.0.0.0", 8080));
-
     }
 
     void Server::stop()
@@ -120,10 +118,9 @@ namespace http {
       headers.insert({ key, val });
     }
 
-
     void Response::setStatus (int code) {
         statusSet = true;
-        if (writtenOrEnded) throw runtime_error("Can not set status after write");
+        if (writtenOrEnded) return;
         statusCode = code;
         switch(code) {
             case http_status::HTTP_STATUS_OK:
@@ -152,7 +149,7 @@ namespace http {
 
     void Response::writeOrEnd(string str, bool end) {
 
-      if (ended) throw runtime_error("Can not write after end");
+      if (ended) return;
 
       stringstream ss;
 
@@ -213,11 +210,9 @@ namespace http {
       }
     }
 
-
     void Response::write(string s) {
       this->writeOrEnd(s, false);
     }
-
 
     void Response::end(string s) {
       this->writeOrEnd(s, true);

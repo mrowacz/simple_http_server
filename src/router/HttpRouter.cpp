@@ -2,7 +2,10 @@
 // Created by mrowacz on 18.09.17.
 //
 
+#include "dao/Dao.h"
+#include "LogEngine.h"
 #include "HttpRouter.h"
+#include "ServerError.h"
 
 using namespace router;
 using namespace std;
@@ -14,7 +17,13 @@ void Router::route(http::Request& req, http::Response& res)
     });
 
     if (it != vec.end()) {
-        it->get()->handle(req, res);
+        try {
+            it->get()->handle(req, res);
+        } catch (dao::dao_exception& e) {
+            WARN() << "dao_exception "
+                   << templates::toUType(e.code());
+            ServerError::handleDaoException(e, res);
+        }
     } else throw router::router_exception(router_error::bad_request);
 }
 
