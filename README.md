@@ -18,3 +18,6 @@ ab -n 10000 -c 10 http://127.0.0.1:8080/api/objects/abc
 
 valgrind --leak-check=yes --track-origins=yes --dsymutil=yes  ./http_server -p 8000 --db memory
 
+### gitlab local ci
+
+gitlab-runner exec docker server-build
