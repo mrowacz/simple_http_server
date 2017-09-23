@@ -7,7 +7,9 @@
 
 
 int main(int argc, char **argv) {
+    // display only server version
     slog::init();
+    slog::disable();
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
