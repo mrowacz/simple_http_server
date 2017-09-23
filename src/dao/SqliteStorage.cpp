@@ -4,13 +4,10 @@
 
 #include <http_parser.h>
 #include "SqliteStorage.h"
-#include "../LogEngine.h"
+#include "LogEngine.h"
 
 using namespace dao;
 using namespace std;
-
-namespace logging = boost::log;
-using namespace logging::trivial;
 
 void SqliteStorage::create(const std::string& id, const std::string& payload, const std::string& type)
 {
@@ -54,7 +51,7 @@ std::tuple<std::string, std::string> SqliteStorage::get(const string& id)
         *db << "SELECT name, type, payload FROM objects WHERE name = ?;"
             << id
             >> [&](string name, string type, string payload) -> void {
-                BOOST_LOG_SEV(slog::lg, info) << "Read " << id << " type: " <<
+                INFO() << "Read " << id << " type: " <<
                                               type << " " << payload.size();
 
                 tp = make_tuple<>(type, payload);

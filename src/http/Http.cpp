@@ -122,8 +122,6 @@ namespace http {
 
 
     void Response::setStatus (int code) {
-
-        BOOST_LOG_SEV(slog::lg, trace) << "setStatus " << code;
         statusSet = true;
         if (writtenOrEnded) throw runtime_error("Can not set status after write");
         statusCode = code;
@@ -147,7 +145,7 @@ namespace http {
                 statusAdjective = "Not Found";
                 break;
             default:
-                BOOST_LOG_SEV(slog::lg, fatal) << "Unhandled http code " << code;
+                FATAL() << "Unhandled http code " << code;
                 throw runtime_error("Unhandled http code!");
         }
     }

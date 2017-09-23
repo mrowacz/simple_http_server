@@ -17,6 +17,10 @@
 
 #include "Config.h"
 
+#define INFO()  BOOST_LOG_SEV(slog::lg, boost::log::trivial::info)
+#define WARN()  BOOST_LOG_SEV(slog::lg, boost::log::trivial::warning)
+#define FATAL()  BOOST_LOG_SEV(slog::lg, boost::log::trivial::fatal)
+
 namespace slog {
 
     namespace logging = boost::log;

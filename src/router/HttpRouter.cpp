@@ -3,18 +3,13 @@
 //
 
 #include "HttpRouter.h"
-#include "LogEngine.h"
 
 using namespace router;
 using namespace std;
 
-namespace logging = boost::log;
-using namespace logging::trivial;
-
 void Router::route(http::Request& req, http::Response& res)
 {
     auto it = std::find_if(vec.begin(), vec.end(), [&](auto& entry) -> bool {
-        BOOST_LOG_SEV(slog::lg, trace) << "route(): " << req.url;
         return entry->match(req.url);
     });
 

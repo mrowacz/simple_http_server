@@ -14,9 +14,6 @@
 using namespace http;
 using namespace router;
 
-namespace logging = boost::log;
-using namespace logging::trivial;
-
 volatile bool signal_flag = false;
 void sigint(int a)
 {
@@ -51,13 +48,13 @@ int main(int argc, char *argv[])
     path_1->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
 
-        BOOST_LOG_SEV(slog::lg, info) << "id: " << id;
+        INFO() << "id: " << id;
 
         try {
             string payload;
             string type;
             tie(type, payload) = daoPtr->get(id);
-            BOOST_LOG_SEV(slog::lg, info) << "read from db " << id
+            INFO() << "read from db " << id
                                           << " " << payload.size() << " b"
                                           << " " << type;
             res.headers.insert({"Content-Type", type});
@@ -65,8 +62,7 @@ int main(int argc, char *argv[])
             res.end(payload);
         } catch (dao::dao_exception& e) {
 
-            BOOST_LOG_SEV(slog::lg, warning) << "dao_exception "
-                << templates::toUType(e.code());
+           WARN() << "dao_exception " << templates::toUType(e.code());
 
             ServerError::handleDaoException(e, res);
         }
@@ -75,7 +71,7 @@ int main(int argc, char *argv[])
     path_1->set(router::Method::PUT, [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
 
-        BOOST_LOG_SEV(slog::lg, info) << "id: " << id;
+        INFO() << "id: " << id;
 
         try {
             daoPtr->create(id, req.body.str(), req.headers.at("Content-Type"));
@@ -83,8 +79,7 @@ int main(int argc, char *argv[])
             res.end();
         } catch (dao::dao_exception& e) {
 
-            BOOST_LOG_SEV(slog::lg, warning) << "dao_exception "
-                                             << templates::toUType(e.code());
+            WARN() << "dao_exception " << templates::toUType(e.code());
 
             ServerError::handleDaoException(e, res);
         }
@@ -93,14 +88,14 @@ int main(int argc, char *argv[])
     path_1->set(router::Method::DELETE, [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
 
-        BOOST_LOG_SEV(slog::lg, info) << "id: " << id;
+        INFO() << "id: " << id;
         try {
             daoPtr->del(id);
             res.setStatus(http_status::HTTP_STATUS_OK);
             res.end();
         } catch (dao::dao_exception& e) {
 
-            BOOST_LOG_SEV(slog::lg, warning) << "dao_exception "
+            WARN() << "dao_exception "
                                              << templates::toUType(e.code());
 
             ServerError::handleDaoException(e, res);
@@ -117,7 +112,7 @@ int main(int argc, char *argv[])
             res.end(payload);
         } catch (dao::dao_exception& e) {
 
-            BOOST_LOG_SEV(slog::lg, warning) << "dao_exception "
+            WARN() << "dao_exception "
                                              << templates::toUType(e.code());
 
             ServerError::handleDaoException(e, res);
@@ -129,10 +124,10 @@ int main(int argc, char *argv[])
     router.addPath(path_2);
     Server server([&](auto& req, auto& res) {
         try {
-            BOOST_LOG_SEV(slog::lg, info) << req.method << " " << req.url;
+            INFO() << req.method << " " << req.url;
             router.route(req, res);
         } catch (router_exception& e) {
-            BOOST_LOG_SEV(slog::lg, fatal) << "router_exception "
+            FATAL() << "router_exception "
                 << templates::toUType(e.code());
             ServerError::handleRouterException(e, res);
         }
@@ -140,6 +135,7 @@ int main(int argc, char *argv[])
 
     // catch ctrl + c
     signal(SIGINT, sigint);
+
     // start server
     server.run();
     while(!signal_flag) {}

@@ -19,11 +19,11 @@ void slog::init() {
                     keywords::format = "[%TimeStamp%]: >> %Message%"
             );
 
-    BOOST_LOG_SEV(lg, info) << "Server Version: "
+    INFO() << "Server Version: "
                             << version::VERSION_MAJOR
                             << "."
                             << version::VERSION_MINOR;
-    BOOST_LOG_SEV(lg, info) << "Build SHA1: "
+    INFO() << "Build SHA1: "
                             << version::VERSION_SHA1;
 }
 
