@@ -3,6 +3,7 @@
 ### STATUS
 
 [![pipeline status](https://gitlab.com/mrowacz/wp-interview/badges/master/pipeline.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
+[![coverage report](https://gitlab.com/mrowacz/wp-interview/badges/master/coverage.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
 
 ### VALGRIND
 
