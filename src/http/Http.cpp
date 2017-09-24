@@ -5,6 +5,7 @@
 
 #include "Http.h"
 #include "LogEngine.h"
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 
 namespace http {
 
