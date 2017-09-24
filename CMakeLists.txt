@@ -6,8 +6,8 @@ project(wp_interview)
 include(ExternalProject)
 
 # project versioning
-set (Server_VERSION_MAJOR 0)
-set (Server_VERSION_MINOR 9)
+set (Server_VERSION_MAJOR 1)
+set (Server_VERSION_MINOR 0)
 
 # get git HEAD sha1
 exec_program(

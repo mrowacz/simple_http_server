@@ -1,23 +1,30 @@
 # simple_http_server
 
-### STATUS
+### Status
 
 [![pipeline status](https://gitlab.com/mrowacz/wp-interview/badges/master/pipeline.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
 [![coverage report](https://gitlab.com/mrowacz/wp-interview/badges/master/coverage.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
 
-### VALGRIND
+### Build & Run with docker
+
+build with docker:
 
 ```bash
-valgrind --leak-check=yes --track-origins=yes --dsymutil=yes ./server
+./run_me.sh
 ```
 
-### PERFORMANCE TESTING
+### How to run from command line
 
+```bash
+./http_server -p 8080 --db memory
+```
+
+### Performance testing
+
+```bash
+curl -si 127.0.0.1:8080/api/objects/abc -XPUT -d 'przykladowe dane' -H 'Content-Type:application/json'
 ab -n 10000 -c 10 http://127.0.0.1:8080/api/objects/abc
-
-### VALGRIND TESTING
-
-valgrind --leak-check=yes --track-origins=yes --dsymutil=yes  ./http_server -p 8000 --db memory
+```
 
 ### gitlab local ci
 
