@@ -11,15 +11,13 @@
 
 #include "Dao.h"
 
-using namespace std;
-
 class SqliteStorage : public dao::Dao {
 public:
     SqliteStorage();
     ~SqliteStorage();
     void create(const std::string& id, const std::string& payload, const std::string& type);
-    void del(const string& id);
-    std::tuple<std::string, std::string> get(const string& id);
+    void del(const std::string& id);
+    std::tuple<std::string, std::string> get(const std::string& id);
     std::string list();
     void clear();
 

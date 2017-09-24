@@ -7,6 +7,8 @@
 #include "dao/EphemeralStorage.h"
 #include "gtest/gtest.h"
 
+using namespace std;
+
 TEST(EphemeralStorage, test_ordinary_usage) {
     EphemeralStorage ep;
 

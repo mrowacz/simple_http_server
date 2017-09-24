@@ -7,6 +7,8 @@
 #include "dao/SqliteStorage.h"
 #include "gtest/gtest.h"
 
+using namespace std;
+
 TEST(SqliteStorage, test_ordinary_usage) {
     SqliteStorage ss;
     ss.clear();
