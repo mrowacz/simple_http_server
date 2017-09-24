@@ -70,6 +70,13 @@ TEST(EphemeralStorage, test_exceptions_del) {
             FAIL() << "wrong exception" << endl;
     }
 
+    try {
+        ep.create("two", "", "text");
+        FAIL() << "Expected empty payload exception" << endl;
+    } catch (dao::dao_exception& e) {
+        if (e.code() != dao::dao_error::empty_payload)
+            FAIL() << "wrong exception" << endl;
+    }
 }
 
 TEST(EphemeralStorage, test_object_sizes)

@@ -15,7 +15,7 @@ server-build:
   - mkdir build
   - cd build
   - cmake .. -DCMAKE_CXX_FLAGS="-fprofile-arcs -ftest-coverage -fPIC -O0 -g"
-  - make -j8 VERBOSE=1
+  - make -j8
   - ./runTests --gtest_output=xml:cov.xml
   - find . -type f \( -iname \*.gcno -or -iname \*.gcda \) -exec cp {} .. \;
   - cd ..

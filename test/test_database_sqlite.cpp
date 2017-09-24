@@ -77,6 +77,14 @@ TEST(SqliteStorage, test_exceptions_del) {
         if (e.code() != dao::dao_error::object_too_large)
             FAIL() << "wrong exception" << endl;
     }
+
+    try {
+        ss.create("two", "", "text");
+        FAIL() << "Expected empty payload exception" << endl;
+    } catch (dao::dao_exception& e) {
+        if (e.code() != dao::dao_error::empty_payload)
+            FAIL() << "wrong exception" << endl;
+    }
 }
 
 TEST(SqliteStorage, test_object_sizes)
