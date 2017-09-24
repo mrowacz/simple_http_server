@@ -24,6 +24,8 @@ void Router::route(http::Request& req, http::Response& res)
             WARN() << "dao_exception "
                    << templates::toUType(e.code());
             ServerError::handleDaoException(e, res);
+        } catch (std::bad_function_call& e){
+            throw router::router_exception(router_error::bad_request);
         }
     } else throw router::router_exception(router_error::bad_request);
 }
