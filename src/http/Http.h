@@ -180,7 +180,7 @@ namespace http {
         mutex m;
         thread t;
         bool _flag;
-
+        int port;
         int complete(http_parser* parser, Listener fn);
         int listen (const char*, int);
 
@@ -189,6 +189,7 @@ namespace http {
         ~Server() {}
         void run();
         void stop();
+        void setPort(int port);
     };
 
 } // namespace http

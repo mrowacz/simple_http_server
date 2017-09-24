@@ -15,23 +15,23 @@ namespace http {
 
     const string CRLF = "\r\n";
 
-    Server::Server (Listener fn) :
-            listener(fn) {
+    Server::Server(Listener fn) :
+            listener(fn), port(8080) {
     }
 
-    void Server::run()
-    {
-        t = std::thread(std::bind(&Server::listen, this, "0.0.0.0", 8080));
+    void Server::run() {
+        t = std::thread(std::bind(&Server::listen, this, "0.0.0.0", port));
     }
 
-    void Server::stop()
-    {
+    void Server::stop() {
         {
             std::lock_guard<std::mutex> lock(m);
             _flag = true;
         }
         t.join();
     }
+
+    void Server::setPort(int port) { this->port = port; }
 
     void free_context (uv_handle_t* handle) {
       auto* context = reinterpret_cast<Context*>(handle->data);
