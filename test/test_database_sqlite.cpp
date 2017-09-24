@@ -51,7 +51,7 @@ TEST(SqliteStorage, test_exceptions_del) {
     } catch (exception &e)
     {
         cout << e.what() << endl;
-        FAIL() << "NOKOOOO";
+        FAIL() << "Should not fail";
     }
 
     try {

@@ -3,6 +3,8 @@
 // recognized in your jurisdiction.
 
 #include "Http.h"
+#include "Config.h"
+#include "LogEngine.h"
 
 namespace http {
 
@@ -25,6 +27,13 @@ namespace http {
 
 
   int Server::listen (const char* ip, int port) {
+
+    INFO() << "Server Version: "
+             << version::VERSION_MAJOR
+             << "."
+             << version::VERSION_MINOR;
+    INFO() << "Build SHA1: "
+             << version::VERSION_SHA1;
 
     //
     // parser settings needs to be static.

@@ -5,6 +5,7 @@
 #ifndef WP_INTERVIEW_OPTIONS_H
 #define WP_INTERVIEW_OPTIONS_H
 
+#include <iostream>
 #include <boost/program_options.hpp>
 
 namespace server_options {
@@ -14,6 +15,8 @@ namespace server_options {
     constexpr const char * OPTION_QUIET = "quiet";
     constexpr const char * OPTION_PORT = "port";
     constexpr const char * OPTION_DB = "db";
+    constexpr const char * OPTION_STDOUT_LOG = "disable-stdout";
+    constexpr const char * OPTION_FILE_LOG = "disable-filelog";
 
     constexpr const char * DB_MEMORY_MODE = "memory";
     constexpr const char * DB_SQLITE3_MODE = "sqlite3";
@@ -55,10 +58,12 @@ namespace server_options {
         }
     }
 
-    std::tuple<int, dbtype, bool>
+    std::tuple<int, dbtype, bool, bool, bool>
     process_program_options(const int argc, const char *const argv[])
     {
         bool quietFlag = false;
+        bool silentStd = false;
+        bool silentFileLog = false;
         int port = 0;
         dbtype dbType(DB_MEMORY_MODE);
 
@@ -70,22 +75,26 @@ namespace server_options {
                 )
                 (
                         "quiet,q",
-                        "Do not display log messages on stdout"
+                        "Remove debugs"
+                )
+                (
+                        "disable-stdout",
+                        "Disable logging to the stdout"
+                )
+                (
+                        "disable-filelog",
+                        "Disable logging to the file"
                 )
                 (
                         "port,p",
                         po::value<int>()->required(),
-                        "server port number"
+                        "Server port number"
                 )
                 (
                         "db",
                         po::value<dbtype>()->required(),
-                        "choose place where data will be stored: memory or sqlite3"
+                        "Choose place where data will be stored: memory or sqlite3"
                 );
-
-        if (argc == 1) {
-            exit( EXIT_SUCCESS );
-        }
 
         po::variables_map args;
 
@@ -94,19 +103,27 @@ namespace server_options {
                     po::parse_command_line(argc, argv, desc),
                     args
             );
+            if (argc == 1 || args.count("help")) {
+                std::cout << desc << std::endl;
+                exit( EXIT_SUCCESS );
+            }
             if (args.count(OPTION_QUIET))
                 quietFlag = true;
             if (args.count(OPTION_PORT))
                 port = args[OPTION_PORT].as<int>();
             if (args.count(OPTION_DB))
                 dbType = args[OPTION_DB].as<dbtype>();
+            if (args.count(OPTION_STDOUT_LOG))
+                silentStd = true;
+            if (args.count(OPTION_FILE_LOG))
+                silentFileLog = true;
         }
         catch (po::error const& e) {
             std::cerr << e.what() << '\n';
             exit( EXIT_FAILURE );
         }
         po::notify(args);
-        return std::make_tuple(port, dbType, quietFlag);
+        return std::make_tuple(port, dbType, quietFlag, silentStd, silentFileLog);
     }
 }
 

@@ -2,7 +2,6 @@
 // Distributed under MIT license, or public domain if desired and
 // recognized in your jurisdiction.
 
-#include "Config.h"
 #include "LogEngine.h"
 
 void slog::init() {
@@ -11,18 +10,15 @@ void slog::init() {
                     logging::trivial::severity >= logging::trivial::trace
             );
     logging::add_common_attributes();
+}
+
+void slog::logToStdOut()
+{
     logging::add_console_log
             (
                     std::cout,
                     keywords::format = "[%TimeStamp%]: >> %Message%"
             );
-
-    INFO() << "Server Version: "
-                            << version::VERSION_MAJOR
-                            << "."
-                            << version::VERSION_MINOR;
-    INFO() << "Build SHA1: "
-                            << version::VERSION_SHA1;
 }
 
 void slog::logToFile() {

@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <iostream>
 
+#include "Config.h"
 #include "Options.h"
 #include "LogEngine.h"
 #include "http/Http.h"
@@ -29,11 +30,23 @@ void sigint(int a) {
 int main(int argc, char *argv[]) {
     int port = 8080;
     bool quietFlag = false;
+    bool silentStd = false;
+    bool silentFileLog = false;
     server_options::dbtype dbMode("sqlite3");
     unique_ptr<dao::Dao> daoPtr = nullptr;
 
-    slog::init();
-    std::tie(port, dbMode, quietFlag) = server_options::process_program_options(argc, argv);
+    std::tie(port, dbMode, quietFlag, silentStd, silentFileLog) =
+            server_options::process_program_options(argc, argv);
+
+    if (!quietFlag) {
+        slog::init();
+        if (!silentStd)
+            slog::logToStdOut();
+        if (!silentFileLog)
+            slog::logToFile();
+    } else {
+        slog::disable();
+    }
 
     switch (dbMode.md) {
         case server_options::dbtype::mode::MEMORY:
@@ -46,6 +59,10 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument("Wrong db mode!");
             break;
     }
+
+    INFO() << "Server configuration:";
+    INFO() << "port = " << port;
+    INFO() << "db = " << dbMode.value;
 
     Router router;
     auto path_1 = make_unique<HttpPath>("/api/objects/:id");

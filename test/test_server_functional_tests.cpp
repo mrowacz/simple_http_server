@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <iostream>
+#include <restclient-cpp/restclient.h>
 
 #include "dao/Dao.h"
 #include "http/Http.h"
@@ -11,6 +12,7 @@
 #include "ServerError.h"
 #include "router/HttpRouter.h"
 #include "dao/SqliteStorage.h"
+#include "dao/EphemeralStorage.h"
 #include "restclient-cpp/restclient.h"
 
 #include "task.h"
@@ -24,7 +26,7 @@ protected:
 
     ServerTest() :
             router(),
-            daoPtr(make_unique<SqliteStorage>()),
+            daoPtr(make_unique<EphemeralStorage>()),
             path_1(make_unique<HttpPath>("/api/objects/:id")),
             path_2(make_unique<HttpPath>("/api/objects"))
     {
@@ -39,53 +41,38 @@ protected:
         path_1->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) -> void {
             string id = (*pHandler)["id"];
 
-            try {
-                string payload;
-                string type;
-                tie(type, payload) = daoPtr->get(id);
-                res.headers.insert({"Content-Type", type});
-                res.setStatus(http_status::HTTP_STATUS_OK);
-                res.end(payload);
-            } catch (dao::dao_exception& e) {
-                ServerError::handleDaoException(e, res);
-            }
+            string payload;
+            string type;
+            tie(type, payload) = daoPtr->get(id);
+            res.headers.insert({"Content-Type", type});
+            res.setStatus(http_status::HTTP_STATUS_OK);
+            res.end(payload);
+
         });
 
         path_1->set(router::Method::PUT, [&](auto& req, auto& res, auto pHandler) -> void {
             string id = (*pHandler)["id"];
-            try {
-                daoPtr->create(id, req.body.str(), req.headers.at("Content-Type"));
-                res.setStatus(http_status::HTTP_STATUS_CREATED);
-                res.end();
-            } catch (dao::dao_exception& e) {
-
-                ServerError::handleDaoException(e, res);
-            }
+            daoPtr->create(id, req.body.str(), req.headers.at("Content-Type"));
+            res.setStatus(http_status::HTTP_STATUS_CREATED);
+            res.end();
         });
 
         path_1->set(router::Method::DELETE, [&](auto& req, auto& res, auto pHandler) -> void {
             string id = (*pHandler)["id"];
 
-            try {
-                daoPtr->del(id);
-                res.setStatus(http_status::HTTP_STATUS_OK);
-                res.end();
-            } catch (dao::dao_exception& e) {
-                ServerError::handleDaoException(e, res);
-            }
+            daoPtr->del(id);
+            res.setStatus(http_status::HTTP_STATUS_OK);
+            res.end();
+
         });
 
         auto path_2 = make_unique<HttpPath>("/api/objects");
         path_2->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) {
             string payload;
-            try {
-                payload = daoPtr->list();
-                res.headers.insert({"Content-Type", "application/json"});
-                res.setStatus(http_status::HTTP_STATUS_OK);
-                res.end(payload);
-            } catch (dao::dao_exception& e) {
-                ServerError::handleDaoException(e, res);
-            }
+            payload = daoPtr->list();
+            res.headers.insert({"Content-Type", "application/json"});
+            res.setStatus(http_status::HTTP_STATUS_OK);
+            res.end(payload);
         });
         router.addPath(path_1);
         router.addPath(path_2);
@@ -159,4 +146,18 @@ TEST_F(ServerTest, CRUD_basic_tests_with_sql)
     RestClient::put("http://localhost:8080/api/objects/key3", "text/json", str);
     r = RestClient::get("http://localhost:8080/api/objects");
     EXPECT_EQ(output, r.body);
+}
+
+TEST_F(ServerTest, CRUD_wrong_requests)
+{
+    std::string str("{\"foo\": \"bla\"}");
+    std::string url("http://localhost:8080/api/objects/abc");
+
+    // first make standard query
+    auto r = RestClient::put(
+            url,
+            "",
+            str
+    );
+    EXPECT_EQ(400, r.code);
 }

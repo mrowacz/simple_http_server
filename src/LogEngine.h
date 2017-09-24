@@ -31,6 +31,9 @@ namespace slog {
 
     void init();
     void disable();
+    void logToStdOut();
+    void logToFile();
+    
     // start logging into file server_%N.log
     // in directory where server is executed
     void logToFile();
