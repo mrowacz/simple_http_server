@@ -11,3 +11,4 @@ RUN apt-get update && apt-get -y install \
 		 libboost-all-dev
 COPY . /root/source/
 RUN cd /root/source && mkdir build && cd build && cmake .. && make
+RUN /root/source/build/runTests
