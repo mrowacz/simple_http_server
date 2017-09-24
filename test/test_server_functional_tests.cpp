@@ -5,25 +5,26 @@
 #include <memory>
 #include <iostream>
 
-#include "task.h"
 #include "dao/Dao.h"
 #include "http/Http.h"
 #include "gtest/gtest.h"
 #include "ServerError.h"
 #include "router/HttpRouter.h"
-#include "dao/EphemeralStorage.h"
+#include "dao/SqliteStorage.h"
 #include "restclient-cpp/restclient.h"
+
+#include "task.h"
 
 using namespace std;
 using namespace http;
 using namespace router;
 
-class ServerTest_2 : public ::testing::Test {
+class ServerTest : public ::testing::Test {
 protected:
 
-    ServerTest_2() :
+    ServerTest() :
             router(),
-            daoPtr(make_unique<EphemeralStorage>()),
+            daoPtr(make_unique<SqliteStorage>()),
             path_1(make_unique<HttpPath>("/api/objects/:id")),
             path_2(make_unique<HttpPath>("/api/objects"))
     {
@@ -91,7 +92,7 @@ protected:
         server->run();
     }
 
-    virtual ~ServerTest_2() {
+    virtual ~ServerTest() {
         server->stop();
         MAKE_VALGRIND_HAPPY();
     }
@@ -110,7 +111,7 @@ protected:
     unique_ptr<HttpPath> path_2;
 };
 
-TEST_F(ServerTest_2, CRUD_basic_tests_with_eph)
+TEST_F(ServerTest, CRUD_basic_tests_with_sql)
 {
     std::string str("{\"foo\": \"bla\"}");
     std::string url("http://localhost:8080/api/objects/abc");
