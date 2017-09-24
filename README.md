@@ -2,8 +2,8 @@
 
 ### Status
 
-[![pipeline status](https://gitlab.com/mrowacz/wp-interview/badges/master/pipeline.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
-[![coverage report](https://gitlab.com/mrowacz/wp-interview/badges/master/coverage.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
+[![master](https://gitlab.com/mrowacz/wp-interview/badges/master/pipeline.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
+[![coverage](https://gitlab.com/mrowacz/wp-interview/badges/master/coverage.svg)](https://gitlab.com/mrowacz/wp-interview/commits/master)
 
 ### Build & Run with docker
 
@@ -16,7 +16,7 @@ build with docker:
 ### How to run from command line
 
 ```bash
-./http_server -p 8080 --db memory
+./http_server -p 8080 --db sqlite3
 ```
 
 ### Performance testing
