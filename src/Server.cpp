@@ -33,8 +33,7 @@ int main(int argc, char *argv[]) {
     unique_ptr<dao::Dao> daoPtr = nullptr;
 
     slog::init();
-//    std::tie(port, dbMode, quietFlag) = s
-// erver_options::process_program_options(argc, argv);
+    std::tie(port, dbMode, quietFlag) = server_options::process_program_options(argc, argv);
 
     switch (dbMode.md) {
         case server_options::dbtype::mode::MEMORY:

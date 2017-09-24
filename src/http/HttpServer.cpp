@@ -132,7 +132,8 @@ namespace http {
           });
     };
 
-    status = uv_listen((uv_stream_t*) &socket_, MAX_WRITE_HANDLES,
+    status = uv_listen(reinterpret_cast<uv_stream_t*>(&socket_),
+                       MAX_WRITE_HANDLES,
         // listener
         [](uv_stream_t* socket, int status) {
           on_connect(socket, status);
@@ -142,8 +143,7 @@ namespace http {
 
     // init loop
     _flag = false;
-    while(uv_run(UV_LOOP, UV_RUN_NOWAIT))
-    {
+    while (uv_run(UV_LOOP, UV_RUN_NOWAIT)) {
         {
             std::lock_guard<std::mutex> lock(m);
             if (_flag)
@@ -153,6 +153,4 @@ namespace http {
 
     return 0;
   }
-
-} // namespace http
-
+}  // namespace http

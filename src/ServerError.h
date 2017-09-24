@@ -23,7 +23,7 @@ namespace ServerError {
                 resp.setStatus(http_status::HTTP_STATUS_PAYLOAD_TOO_LARGE);
                 break;
             case dao::dao_error::empty_content:
-                resp.setStatus(http_status::HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE);
+                resp.setStatus(http_status::HTTP_STATUS_BAD_REQUEST);
                 break;
             case dao::dao_error::empty_payload:
                 resp.setStatus(http_status::HTTP_STATUS_NO_CONTENT);

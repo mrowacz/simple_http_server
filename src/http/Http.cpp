@@ -38,6 +38,7 @@ namespace http {
       free(context);
     }
 
+    constexpr  char * CONTENT_TYPE_HEADER = "Content-Type";
     //
     // Events
     //
@@ -76,8 +77,10 @@ namespace http {
       settings.on_header_value =
               [](http_parser* parser, const char* at, size_t length) -> int {
                   Context* context = static_cast<Context*>(parser->data);
-                  if (at && context && !context->cHeaderStr.compare("Content-Type")) {
+                  if (at && context && !context->cHeaderStr.compare(CONTENT_TYPE_HEADER)) {
                       context->headers.insert({context->cHeaderStr, string(at, length)});
+                      INFO() << "Header: " << context->cHeaderStr << ":\t"
+                             << string(at, length);
                   }
 
                   return 0;
@@ -87,6 +90,9 @@ namespace http {
       settings.on_headers_complete =
               [](http_parser* parser) -> int {
                   Context* context = static_cast<Context*>(parser->data);
+                  auto it = context->headers.find(CONTENT_TYPE_HEADER);
+                  if (it == context->headers.end())
+                      context->headers.insert({CONTENT_TYPE_HEADER, ""});
                   context->method = string(http_method_str((enum http_method) parser->method));
                   return 0;
               };
@@ -145,6 +151,9 @@ namespace http {
                 break;
             case http_status::HTTP_STATUS_NOT_FOUND:
                 statusAdjective = "Not Found";
+                break;
+            case http_status::HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE:
+                statusAdjective = "Unsupported Media Type";
                 break;
             default:
                 FATAL() << "Unhandled http code " << code;
