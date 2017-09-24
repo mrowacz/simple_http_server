@@ -15,7 +15,11 @@
 #include "dao/EphemeralStorage.h"
 
 using std::string;
-using http::HttpPath;
+using std::unique_ptr;
+using std::make_unique;
+using http::Server;
+using router::Router;
+using router::HttpPath;
 
 volatile bool signal_flag = false;
 void sigint(int a) {
@@ -99,7 +103,7 @@ int main(int argc, char *argv[]) {
         try {
             INFO() << req.method << " " << req.url;
             router.route(req, res);
-        } catch (router_exception& e) {
+        } catch (router::router_exception& e) {
             FATAL() << "router_exception "
                     << templates::toUType(e.code());
             ServerError::handleRouterException(e, res);

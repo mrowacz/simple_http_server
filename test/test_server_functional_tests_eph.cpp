@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 
+#include "task.h"
 #include "dao/Dao.h"
 #include "http/Http.h"
 #include "gtest/gtest.h"
