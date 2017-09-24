@@ -1,6 +1,6 @@
-//
-// Created by l.czerwinski on 9/14/17.
-//
+// Copyright 2017 Lukasz Czerwinski mrowacz@gmail.com
+// Distributed under MIT license, or public domain if desired and
+// recognized in your jurisdiction.
 
 #include <iostream>
 #include <algorithm>

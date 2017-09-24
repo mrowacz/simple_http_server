@@ -15,8 +15,6 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/setup/console.hpp>
 
-#include "Config.h"
-
 #define INFO()  BOOST_LOG_SEV(slog::lg, boost::log::trivial::info)
 #define WARN()  BOOST_LOG_SEV(slog::lg, boost::log::trivial::warning)
 #define FATAL()  BOOST_LOG_SEV(slog::lg, boost::log::trivial::fatal)

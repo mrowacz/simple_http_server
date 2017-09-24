@@ -1,13 +1,11 @@
-//
-// Created by mrowacz on 21.09.17.
-//
+// Copyright 2017 Lukasz Czerwinski mrowacz@gmail.com
+// Distributed under MIT license, or public domain if desired and
+// recognized in your jurisdiction.
 
+#include "Config.h"
 #include "LogEngine.h"
 
-using namespace slog;
-
 void slog::init() {
-
     logging::core::get()->set_filter
             (
                     logging::trivial::severity >= logging::trivial::trace
@@ -27,8 +25,7 @@ void slog::init() {
                             << version::VERSION_SHA1;
 }
 
-void slog::logToFile()
-{
+void slog::logToFile() {
     logging::add_file_log
             (
                     keywords::file_name = "server_%N.log",

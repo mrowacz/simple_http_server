@@ -92,6 +92,7 @@ protected:
 
     virtual ~ServerTest_2() {
         server->stop();
+        MAKE_VALGRIND_HAPPY();
     }
 
     virtual void SetUp() {

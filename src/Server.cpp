@@ -1,6 +1,9 @@
+// Copyright 2017 Lukasz Czerwinski mrowacz@gmail.com
+// Distributed under MIT license, or public domain if desired and
+// recognized in your jurisdiction.
+
 #include <signal.h>
 #include <iostream>
-
 
 #include "Options.h"
 #include "LogEngine.h"
@@ -11,24 +14,23 @@
 #include "dao/SqliteStorage.h"
 #include "dao/EphemeralStorage.h"
 
-using namespace http;
-using namespace router;
+using std::string;
+using http::HttpPath;
 
 volatile bool signal_flag = false;
-void sigint(int a)
-{
+void sigint(int a) {
     signal_flag = true;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     int port = 8080;
     bool quietFlag = false;
     server_options::dbtype dbMode("sqlite3");
     unique_ptr<dao::Dao> daoPtr = nullptr;
 
     slog::init();
-//    std::tie(port, dbMode, quietFlag) = server_options::process_program_options(argc, argv);
+//    std::tie(port, dbMode, quietFlag) = s
+// erver_options::process_program_options(argc, argv);
 
     switch (dbMode.md) {
         case server_options::dbtype::mode::MEMORY:
@@ -45,8 +47,8 @@ int main(int argc, char *argv[])
     Router router;
     auto path_1 = make_unique<HttpPath>("/api/objects/:id");
 
-    path_1->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler) -> void
-    {
+    path_1->set(router::Method::GET,
+                [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
         INFO() << "id: " << id;
 
@@ -61,7 +63,8 @@ int main(int argc, char *argv[])
         res.end(payload);
     });
 
-    path_1->set(router::Method::PUT, [&](auto& req, auto& res, auto pHandler) -> void {
+    path_1->set(router::Method::PUT,
+                [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
 
         INFO() << "PUT id: " << id;
@@ -70,8 +73,8 @@ int main(int argc, char *argv[])
         res.end();
     });
 
-    path_1->set(router::Method::DELETE, [&](auto& req, auto& res, auto pHandler) -> void
-    {
+    path_1->set(router::Method::DELETE,
+                [&](auto& req, auto& res, auto pHandler) -> void {
         string id = (*pHandler)["id"];
         INFO() << "DELETE id: " << id;
         daoPtr->del(id);
@@ -80,8 +83,8 @@ int main(int argc, char *argv[])
     });
 
     auto path_2 = make_unique<HttpPath>("/api/objects");
-    path_2->set(router::Method::GET, [&](auto& req, auto& res, auto pHandler)
-    {
+    path_2->set(router::Method::GET,
+                [&](auto& req, auto& res, auto pHandler) {
         string payload;
         payload = daoPtr->list();
         res.headers.insert({"Content-Type", "application/json"});
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
 
     // start server
     server.run();
-    while(!signal_flag) {}
+    while (!signal_flag) {}
     server.stop();
 
     return 0;

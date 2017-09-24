@@ -1,3 +1,8 @@
+// Copyright 2017 Lukasz Czerwinski mrowacz@gmail.com
+// Distributed under MIT license, or public domain if desired and
+// recognized in your jurisdiction.
+
+
 #include "Http.h"
 #include "LogEngine.h"
 
